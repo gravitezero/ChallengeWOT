@@ -1,10 +1,10 @@
 {
-  "name": "node-example",
+  "name": "ChallengeWoT",
   "version": "0.0.1",
   "dependencies": {
-    "express": "2.5.x"
+    "express": "x"
   },
   "engines": {
-    "node": "0.6.x"
+    "node": "0.10.x"
   }
 }
