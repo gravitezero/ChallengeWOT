@@ -1,0 +1,9 @@
+{
+  "name": "virtualjoystick.js",
+  "version": "0.0.0",
+  "commit": "6fed7d575cefbd7d5ee1a0a1fe7ec911564de43c",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jeromeetienne/virtualjoystick.js.git"
+  }
+}

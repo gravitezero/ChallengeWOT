@@ -1,0 +1,51 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	overflow: hidden;
+}
+
+body {
+	background-color: #EEE;
+}
+
+#info {
+	color: white;
+	position	: absolute;
+	top	: 0px;
+	width	: 100%;
+	padding	: 5px;
+	text-align	: center;
+	background: rgba(0,0,0,0.4);
+	font-size: 30pt;
+	font-weight: 100;
+	font-family: sans-serif;
+}
+
+#info span, #info ul {
+	display: block;
+}
+
+#info li {
+	display: none;
+	list-style-type: none;
+}
+
+#info li.key-up {
+	display: inline-block;
+	margin: 0 10px;
+}
+
+#container {
+	width	: 100%;
+	height	: 100%;
+	-webkit-user-select	: none;
+	-moz-user-select	: none;
+}
+
+canvas {
+	opacity: 0.4;
+}
