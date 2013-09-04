@@ -1,7 +1,8 @@
 const ControlFreq = 1/30 * 1000;
 const SensorsFreq = 300;
-const host = '192.168.8.128';
+const host = '192.168.8.122';
 const speedFactor = 1;
+const MaxSpeed = 700;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      controls                                                                                             //
@@ -96,6 +97,7 @@ ws = new WebSocket("ws://" + host + ":8080/NXTWebSocketServer/socket");
 
 ws.onopen = function(event) {
 	console.log("Connected to the websocket server");
+  robot.connect();
 };
 
 ws.onmessage = function(event) {
@@ -103,8 +105,14 @@ ws.onmessage = function(event) {
 
   response = JSON.parse(event.data);
 
+  if(response.status === "connected")
+    robot.isConnected = true;
+
+  if(response.status === "disconnected")
+    robot.isConnected = false;
+
   for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
-    NXT.setSensorValue(sensor.name, sensor.value);
+    robot.setSensorValue(sensor.name, sensor.value);
   }
 
   // We received sensors data, update stuffs
@@ -127,12 +135,18 @@ function NXT() {
 
   this.sensors = {}
 
-  this.connect = _CMDFactory('{"action": "connect", "mode": BT}');
+  this.connect = _CMDFactory('{"action": "connect", "mode": "bt"}');
   this.disconnect = _CMDFactory('{"action": "disconnect"}');
+
+  this.isConnected = false;
 
   this.motors = function(motors) {
     // [left, right]
-    _sendCMD('{"motor_command":[{"name": "left", "action": "start",  "speed": ' + motors[0] + '}, {"name": "right", "action": "start",  "speed": ' + motors[1] + '}]}');
+
+    if (motors[0] === motors[1])
+      _sendCMD('{"motor_command":[{"name": "both", "action": "start",  "speed": ' + motors[0] + '}]}');
+    else
+      _sendCMD('{"motor_command":[{"name": "left", "action": "start",  "speed": ' + motors[0] + '}, {"name": "right", "action": "start",  "speed": ' + motors[1] + '}]}');
 
   }
 
@@ -177,20 +191,29 @@ function NXT() {
 
   this.setSensorValue = function(name, value) {
     this.sensors[name] = value;
+    controls['set'+name.uppercase()](value);
+
   }
 
-  var _CMDFactory = function(cmd) {
+  function _CMDFactory(cmd) {
     return function() {
+      console.log('>>>  ' + cmd);
       _sendCMD(cmd);
     }
   }
 
-  var _sendCMD = function(cmd) {
+  function _sendCMD(cmd) {
     if (ws.readyState === 1)
       ws.send(cmd);
   }
-
+ 
+  return this;
 }
+
+var robot = NXT();
+
+
+document.getElementById('disconnect').addEventListener('click', robot.disconnect);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      JOYSTICK CONTROL                                                                                     //
@@ -205,28 +228,46 @@ var joystick    = new VirtualJoystick({
 });
 setInterval(function(){
   var outputEl    = document.getElementById('result');
-  outputEl.innerHTML  = joystick.deltaX() + '   ' + joystick.deltaY();
 
+  var dx = joystick.deltaX();
+  var dy = joystick.deltaY();
 
-
-
+  outputEl.innerHTML  = dx + '   ' + dy;
+  if (dx !== 0)
+    robot.motors(toMotorControls(dx, dy));
 
 }, ControlFreq);
 
 var toMotorControls = function(dx, dy) {
 
-  speed = Math.sqrt(dx^2 + dy^2);
+  speed = Math.sqrt(dx * dx + dy * dy);
+
+  if (dx > 0 && dy < 0) {
+    theta = Math.atan(dx / dy);
+
+    console.log(MaxSpeed, speed, theta);
+
+    left = MaxSpeed * speed / 600 ;
+    right = MaxSpeed * speed / 600 * (-(Math.PI/2) + 2*theta)/ (Math.PI/2);
+  }
+  else {
+    left = 0;
+    right = 0;
+  }
+
 
   // if dx = 0, full speed on both motors
   // if dx /= 0, dy = 0, full speed on one motor
 
-  var turnLeft = min(1, 1 + (dx / 255));
-  var turnRight = min(1, 1 - (dx / 255));
+  // var turnLeft = Math.min(1, 1 + (dx / 255));
+  // var turnRight = Math.min(1, 1 - (dx / 255));
 
-  var left = speed * speedFactor * turnLeft;
-  var right = speed * speedFactor * turnRight;
+  // var left = Math.floor(speed * speedFactor * turnLeft);
+  // var right = Math.floor(speed * speedFactor * turnRight);
 
-  return [left, right];
+  console.log(left, right);
+
+  return [Math.floor(left), Math.floor(right)];
 }
 
 
