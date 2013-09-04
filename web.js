@@ -1,5 +1,5 @@
 var express = require('express'),
-	publicDir = '/.';
+	publicDir = '/src';
 
 var app = express.createServer(express.logger());
 
