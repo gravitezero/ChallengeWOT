@@ -1,32 +1,44 @@
 * {
 	margin: 0;
 	padding: 0;
-	box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 
 html {
 	overflow: hidden;
+	width: 100%;
+	height: 100%;
 }
 
 body {
 	background-color: #EEE;
+	width: 100%;
+	height: 100%;
 }
 
 #info {
 	color: white;
-	position	: absolute;
-	top	: 0px;
-	width	: 100%;
-	padding	: 5px;
-	text-align	: center;
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	padding: 5px;
 	background: rgba(0,0,0,0.4);
 	font-size: 30pt;
 	font-weight: 100;
 	font-family: sans-serif;
 }
 
+#info #result {
+	width: 200px;
+	margin: auto;
+}
+
 #info span, #info ul {
-	display: block;
+	display: inline-block;
+}
+
+#info span, #info ul, #info li {
+	line-height: 20pt;
 }
 
 #info li {
@@ -39,6 +51,17 @@ body {
 	margin: 0 10px;
 }
 
+#controls {
+	float: right;
+}
+
+#color, #ultrasonic, #compass {
+	width: 50px;
+	height: 50px;
+	display: inline-block;
+	/*border: 1px solid rgba(0,0,0,0.4);*/
+}
+
 #container {
 	width	: 100%;
 	height	: 100%;
@@ -47,5 +70,5 @@ body {
 }
 
 canvas {
-	opacity: 0.4;
+	/*opacity: 0.4;*/
 }

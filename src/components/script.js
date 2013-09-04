@@ -4,6 +4,91 @@ const host = '192.168.8.128';
 const speedFactor = 1;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//      controls                                                                                             //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function Controls() {
+
+  var color = document.getElementById('color');
+  var compass = document.getElementById('compass');
+  var ultrasonic = document.getElementById('ultrasonic');
+
+
+  this.setColor = function(r, g, b) {
+    var context = color.getContext('2d');
+
+    context.fillStyle = 'rgb('+r+', '+g+', '+b+')';
+    context.beginPath();
+    context.arc(25, 25, 25, 0, 2*Math.PI, false);
+    context.fill();
+  }
+
+  this.setCompass = function(angle) {
+
+    angle = angle / 180 * Math.PI; // to radian
+
+    var context = compass.getContext('2d');
+    context.clearRect(0, 0, 50, 50);
+
+    context.translate(25, 25);
+    context.rotate(angle);
+    context.fillStyle = 'rgb(230, 50, 70)';
+    context.beginPath();
+    context.lineTo(9, 0);
+    context.lineTo(0, 25);
+    context.lineTo(-9, 0);
+    context.fill();
+
+    context.fillStyle = 'white';
+    context.beginPath();
+    context.lineTo(9, 0);
+    context.lineTo(0, -25);
+    context.lineTo(-9, 0);
+    context.fill();
+
+    context.translate(-25, -25);
+  }
+
+  this.setUltrasonic = function(intensity) {
+
+    var context = ultrasonic.getContext('2d');
+    context.clearRect(0, 0, 50, 50);
+
+    context.translate(25, 50);
+    context.rotate(Math.PI * -0.5);
+    context.fillStyle = (intensity === 255) ? 'red' : 'white' ;
+    intensity = intensity / 255 * 50;
+    context.beginPath();
+
+    context.lineTo(0, 0);
+    context.arc(0, 0, intensity, Math.PI * -0.15, Math.PI * 0.15);
+    context.fill();
+
+    context.rotate(Math.PI * 0.5);
+    context.translate(-25, -50);
+  }
+
+  return this;
+}
+
+var controls = new Controls();
+
+setInterval(function() {
+  controls.setColor(10, 120, Math.floor(Math.random() * 255));
+}, 1000);
+
+setInterval(function() {
+  controls.setUltrasonic(Math.floor(Math.random() *255));
+}, 1000);
+
+setInterval(function() {
+  controls.setCompass(Math.random() * 360);
+}, 1000);
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      websocket                                                                                            //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -113,8 +198,6 @@ function NXT() {
 
 console.log("touchscreen is", VirtualJoystick.touchScreenAvailable() ? "available" : "not available");
 
-console.log(document.getElementById('info'));
-
 var joystick    = new VirtualJoystick({
   container       : document.getElementById('container'),
   mouseSupport    : true,
@@ -154,9 +237,6 @@ var toMotorControls = function(dx, dy) {
 
 var log = $('#keys')[0],
     pressedKeys = [];
-
-console.log($('#keys'));
-console.log(document.getElementById('keys'));
 
 var keyPressed = function(doClass) {
     return function(evt) {
