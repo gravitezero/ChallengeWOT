@@ -184,11 +184,18 @@ function Controls() {
     context.rotate(Math.PI * -0.5);
     context.fillStyle = (intensity === 255) ? 'red' : 'white' ;
     intensity = intensity / 255 * 50;
-    context.beginPath();
 
+    context.beginPath();
     context.lineTo(0, 0);
     context.arc(0, 0, intensity, Math.PI * -0.15, Math.PI * 0.15);
     context.fill();
+
+    context.beginPath();
+    context.lineTo(0, 0);
+    context.arc(0, 0, 49.5, Math.PI * -0.15, Math.PI * 0.15);
+    context.lineTo(0,0);
+    context.strokeStyle = 'white';
+    context.stroke();
 
     context.rotate(Math.PI * 0.5);
     context.translate(-25, -50);
@@ -200,15 +207,15 @@ function Controls() {
 var controls = new Controls();
 
 // setInterval(function() {
-//   controls.setColor(10, 120, Math.floor(Math.random() * 255));
+  controls.setColor(10, 120, Math.floor(Math.random() * 255));
 // }, 1000);
 
 // setInterval(function() {
-//   controls.setUltrasonic(Math.floor(Math.random() *255));
+  controls.setUltrasonic(Math.floor(Math.random() *255));
 // }, 1000);
 
 // setInterval(function() {
-//   controls.setCompass(Math.random() * 360);
+  controls.setCompass(Math.random() * 360);
 // }, 1000);
 
 

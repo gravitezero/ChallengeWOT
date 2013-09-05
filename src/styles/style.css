@@ -56,6 +56,19 @@ body {
 	display: none;
 }
 
+#disconnect {
+	line-height: 50px;
+	width: 50px;
+
+	color: rgb(100, 0, 0);
+	font-size: 40pt;
+
+	border-radius: 5px;
+	border: none;
+	border-bottom: 3px solid rgb(100, 0, 0);
+	background: rgb(200, 50, 50);
+}
+
 #controls {
 	float: right;
 }
