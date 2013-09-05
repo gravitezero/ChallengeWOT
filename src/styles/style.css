@@ -51,6 +51,11 @@ body {
 	margin: 0 10px;
 }
 
+/* DEBUG */
+#info #result, #info #keys {
+	display: none;
+}
+
 #controls {
 	float: right;
 }

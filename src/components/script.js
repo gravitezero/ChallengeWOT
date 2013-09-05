@@ -36,6 +36,12 @@ function Map() {
 
   var canvas = document.getElementById('map').getContext('2d');
 
+  this._width = 400;
+  this._height = 200;
+
+  this._ox = this._width /2;
+  this._oy = this._height /2;
+
   this._point = [];
   this._origin = {x: 0, y:0, angle:0};
 
@@ -60,15 +66,21 @@ function Map() {
   }
 
   this._pre = function(o) {
-    canvas.translate(150, 100);
+
+    canvas.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    canvas.fillRect(0, 0, this._width, this._height);
+
+    canvas.translate(this._ox, this._oy);
     canvas.rotate(Math.PI);
 
-    canvas.fillStyle = 'rgb(50, 100, 250)';
+    canvas.fillStyle = 'rgb(100, 180, 255)';
+    canvas.strokeStyle = 'rgb(50, 100, 250)';
     canvas.beginPath();
-    canvas.lineTo(9, 0);
-    canvas.lineTo(0, 25);
-    canvas.lineTo(-9, 0);
+    canvas.lineTo(10, -10);
+    canvas.lineTo(0, 15);
+    canvas.lineTo(-10, -10);
     canvas.fill();
+    canvas.stroke();
     canvas.closePath();
 
     canvas.rotate(-o.a);
@@ -79,7 +91,7 @@ function Map() {
     canvas.translate(o.x, o.y);
     canvas.rotate(o.a);
     canvas.rotate(-Math.PI);
-    canvas.translate(-150, -100);
+    canvas.translate(-this._ox, -this._oy);
   }
 
   this._clear = function() {
@@ -87,6 +99,8 @@ function Map() {
   }
 
   this._displayPoints = function() {
+    canvas.strokeStyle = 'rgb(100, 100, 100)';
+
     for (var i in this._point) { var p = this._point[i];
       canvas.beginPath();
       canvas.arc(p.x, p.y, p.a, 0, Math.PI*2);
