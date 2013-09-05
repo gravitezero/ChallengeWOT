@@ -69,9 +69,10 @@ body {
 
 #map {
 	position: absolute;
-	border: 1px solid black;
+	border: 1px solid rgba(0, 0, 0, 0.4);
 	top: 75px;
 	right: 5px;
+	border-radius: 5px;
 }
 
 #container {

@@ -36,7 +36,7 @@ function Map() {
 
   var canvas = document.getElementById('map').getContext('2d');
 
-  this._width = 400;
+  this._width = 350;
   this._height = 200;
 
   this._ox = this._width /2;
