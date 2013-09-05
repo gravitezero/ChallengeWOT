@@ -450,10 +450,10 @@ setInterval(function(){
 var toMotorControls = function(dx, dy) {
 
   left = (Math.cos(3*Math.PI/8) * dx - Math.sin(3*Math.PI/8) * dy) * speedFactor;
-  left = Math.max(-MaxSPeed, Math.min(MaxSPeed,left));
+  left = Math.max(-MaxSpeed, Math.min(MaxSpeed,left));
 
   right = (Math.sin(Math.PI/8) * dx + Math.cos(Math.PI/8) * dy) * speedFactor;
-  right = Math.max(-MaxSPeed, Math.min(MaxSPeed,right));
+  right = Math.max(-MaxSpeed, Math.min(MaxSpeed,right));
 
   return [Math.floor(left), Math.floor(right)];
 }
