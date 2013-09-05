@@ -1,8 +1,119 @@
 const ControlFreq = 1/30 * 1000;
 const SensorsFreq = 300;
-const host = '192.168.8.122';
+const host = '192.168.8.123';
 const speedFactor = 1;
 const MaxSpeed = 700;
+
+function capital(string)
+{
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function parser(data) {
+  var terms = data.split(',');
+  var response = {};
+
+  for( var i in terms) { var term = terms[i];
+    var term = term.split(': ')
+
+    for( var j in term) {
+      term[j] = term[j].replace('"','').replace('{', '').replace('}', '').replace('"', '');
+    }
+
+    response[term[0]] = term[1];
+  }
+
+  return response;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//      map                                                                                                  //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function Map() {
+
+  console.log('map');
+
+  var canvas = document.getElementById('map').getContext('2d');
+
+  this._point = [];
+  this._origin = {x: 0, y:0, angle:0};
+
+  this.translate = function(x, y) {
+    var a = this._origin.angle;
+    
+    this._origin.x += Math.cos(-a)*x + Math.sin(-a)*y;
+    this._origin.y += Math.cos(-a)*y + Math.sin(-a)*x;
+  }
+
+  this.rotate = function(angle) {
+    this._origin.angle -= angle;
+  }
+
+  this.point = function(x, y, accuracy) {
+    var o = {x: this._origin.x, y: this._origin.y, a: this._origin.angle};
+
+    this._point.push({
+      x: o.x + Math.cos(-o.a)*x + Math.sin(-o.a)*y,
+      y: o.y + Math.cos(-o.a)*y + Math.sin(-o.a)*x,
+      a: accuracy || 10});
+  }
+
+  this._pre = function(o) {
+    canvas.translate(150, 100);
+    canvas.rotate(Math.PI);
+
+    canvas.fillStyle = 'rgb(50, 100, 250)';
+    canvas.beginPath();
+    canvas.lineTo(9, 0);
+    canvas.lineTo(0, 25);
+    canvas.lineTo(-9, 0);
+    canvas.fill();
+    canvas.closePath();
+
+    canvas.rotate(-o.a);
+    canvas.translate(-o.x, -o.y);
+  }
+
+  this._post = function(o) {
+    canvas.translate(o.x, o.y);
+    canvas.rotate(o.a);
+    canvas.rotate(-Math.PI);
+    canvas.translate(-150, -100);
+  }
+
+  this._clear = function() {
+    canvas.clearRect(0,0, 500, 500);
+  }
+
+  this._displayPoints = function() {
+    for (var i in this._point) { var p = this._point[i];
+      canvas.beginPath();
+      canvas.arc(p.x, p.y, p.a, 0, Math.PI*2);
+      canvas.stroke();
+    }
+  }
+
+  this.draw = function() {
+    var o = {x: this._origin.x, y: this._origin.y, a: this._origin.angle}; // NOT an error, we need the same value for pre and post processing.
+
+    this._clear();
+    this._pre(o);
+    this._displayPoints();
+    this._post(o);
+  }
+
+  return this;
+}
+
+var map = Map();
+setInterval(map.draw, 100);
+
+map.point(50, 40, 5);
+map.point(-40, 50, 5);
+map.point(50, -40, 5);
+map.point(-30, -60, 5);
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      controls                                                                                             //
@@ -74,17 +185,17 @@ function Controls() {
 
 var controls = new Controls();
 
-setInterval(function() {
-  controls.setColor(10, 120, Math.floor(Math.random() * 255));
-}, 1000);
+// setInterval(function() {
+//   controls.setColor(10, 120, Math.floor(Math.random() * 255));
+// }, 1000);
 
-setInterval(function() {
-  controls.setUltrasonic(Math.floor(Math.random() *255));
-}, 1000);
+// setInterval(function() {
+//   controls.setUltrasonic(Math.floor(Math.random() *255));
+// }, 1000);
 
-setInterval(function() {
-  controls.setCompass(Math.random() * 360);
-}, 1000);
+// setInterval(function() {
+//   controls.setCompass(Math.random() * 360);
+// }, 1000);
 
 
 
@@ -97,19 +208,25 @@ ws = new WebSocket("ws://" + host + ":8080/NXTWebSocketServer/socket");
 
 ws.onopen = function(event) {
 	console.log("Connected to the websocket server");
-  robot.connect();
+  // robot.connect(function() {
+  //   consonle.log('robot connected');
+  // });
 };
 
 ws.onmessage = function(event) {
 	console.log("Incoming data : " + event.data);
 
-  response = JSON.parse(event.data);
+  try {
+    response = JSON.parse(event.data);
+  } catch(e) {
+    response = parser(event.data);
+  }
 
   if(response.status === "connected")
-    robot.isConnected = true;
+    robot.isConnected(true);
 
   if(response.status === "disconnected")
-    robot.isConnected = false;
+    robot.isConnected(false);
 
   for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
     robot.setSensorValue(sensor.name, sensor.value);
@@ -135,10 +252,24 @@ function NXT() {
 
   this.sensors = {}
 
-  this.connect = _CMDFactory('{"action": "connect", "mode": "bt"}');
+  this.connect = function(callback) {
+    this._callback = callback;
+    var cmd = '{"action": "connect", "mode": "bt"}';
+    console.log('>>>  ' + cmd);
+    _sendCMD(cmd);
+  }
+
   this.disconnect = _CMDFactory('{"action": "disconnect"}');
 
-  this.isConnected = false;
+  this._isConnected = false;
+  this._callback = undefined;
+
+  this.isConnected = function(state) {
+    this._isConnected = state;
+
+    if (state)
+      this._callback();
+  }
 
   this.motors = function(motors) {
     // [left, right]
@@ -291,6 +422,15 @@ var keyPressed = function(doClass) {
         $(li).text(keytochar(evt.keyCode));
     }
     $(li)[doClass]('key-up');
+
+    if (doClass === 'addClass')
+      switch (evt.keyCode) {
+        case 37: map.rotate(Math.PI/10); break; // left
+        case 38: map.translate(0, 10); break; // up
+        case 39: map.rotate(-Math.PI/10); break; // right
+        case 40: map.translate(0, -10); break; // down
+      }
+
     }
 }
 
@@ -299,11 +439,11 @@ $(document).keyup(keyPressed('removeClass'));
 
 var keytochar = function(key) {
     switch (key) {
-        case 32: return '_';
-        case 37: return "→";
-        case 38: return "↑ ";
-        case 39: return "←";
-        case 40: return "↓ ";
-        default: return undefined;
+      case 32: return '_';
+      case 37: return "→"; // left
+      case 38: return "↑ "; // up
+      case 39: return "←"; // right
+      case 40: return "↓ "; // down
+      default: return undefined;
     }
 } 
