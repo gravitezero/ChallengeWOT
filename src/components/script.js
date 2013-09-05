@@ -4,6 +4,12 @@ const host = '192.168.8.123';
 const speedFactor = 1;
 const MaxSpeed = 700;
 
+const background = '0, 25, 50';
+const stroke = '100, 200, 255';
+const shadow = '50, 150, 255';
+const error = '200, 0, 100';
+const width = 2;
+
 function capital(string)
 {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -31,10 +37,6 @@ function parser(data) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function Map() {
-
-  const background = '0, 25, 50';
-  const stroke = '100, 200, 255';
-  const shadow = '50, 150, 255';
 
   var canvas = document.getElementById('map').getContext('2d');
 
@@ -69,7 +71,7 @@ function Map() {
 
   this._pre = function(o) {
 
-    canvas.lineWidth = 2;
+    canvas.lineWidth = width;
     canvas.fillStyle = 'rgba('+background+', 1)';
     canvas.fillRect(0, 0, this._width, this._height);
 
@@ -182,19 +184,17 @@ function Controls() {
 
     context.translate(25, 25);
     context.rotate(angle);
-    context.fillStyle = 'rgb(230, 50, 70)';
-    context.beginPath();
-    context.lineTo(9, 0);
-    context.lineTo(0, 25);
-    context.lineTo(-9, 0);
-    context.fill();
 
-    context.fillStyle = 'white';
+    context.lineWidth = width;
+    context.strokeStyle = 'rgb('+stroke+')';
+
     context.beginPath();
-    context.lineTo(9, 0);
-    context.lineTo(0, -25);
-    context.lineTo(-9, 0);
-    context.fill();
+    context.lineTo(0, 0);
+    context.lineTo(9, -5);
+    context.lineTo(0, 25);
+    context.lineTo(-9, -5);
+    context.lineTo(0, 0);
+    context.stroke();
 
     context.translate(-25, -25);
   }
@@ -209,19 +209,22 @@ function Controls() {
 
     context.translate(25, 50);
     context.rotate(Math.PI * -0.5);
-    context.fillStyle = (intensity === 255) ? 'red' : 'white' ;
+
+    context.lineWidth = width;
+    context.fillStyle = (intensity === 255) ? 'rgb('+error+')' : 'rgb('+stroke+')' ;
     intensity = intensity / 255 * 50;
 
     context.beginPath();
     context.lineTo(0, 0);
     context.arc(0, 0, intensity, Math.PI * -0.15, Math.PI * 0.15);
+    context.arc(0, 0, intensity-5, Math.PI * 0.15, Math.PI * -0.15, true);
     context.fill();
 
     context.beginPath();
     context.lineTo(0, 0);
     context.arc(0, 0, 49.5, Math.PI * -0.15, Math.PI * 0.15);
     context.lineTo(0,0);
-    context.strokeStyle = 'white';
+    context.strokeStyle = 'rgba('+stroke+', 0.2)';
     context.stroke();
 
     context.rotate(Math.PI * 0.5);

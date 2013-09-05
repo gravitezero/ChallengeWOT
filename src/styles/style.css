@@ -12,7 +12,7 @@ html {
 
 body {
 	/*background-color: #EEE;*/
-	background: url('../Logo-ARC6.jpg') bottom left no-repeat;
+	background: url('../Logo-ARC6.jpg') bottom left no-repeat #000;
 	width: 100%;
 	height: 100%;
 }
@@ -23,10 +23,11 @@ body {
 	top: 0px;
 	width: 100%;
 	padding: 5px;
-	background: rgba(0,0,0,0.4);
+	background: rgba(0, 25, 50, 0.9);
 	font-size: 30pt;
 	font-weight: 100;
 	font-family: sans-serif;
+	border-bottom: 2px solid rgb(100, 200, 255);
 }
 
 #info #result {
@@ -59,15 +60,15 @@ body {
 
 #disconnect {
 	line-height: 50px;
-	width: 50px;
+	width: 60px;
 
-	color: rgb(100, 0, 0);
+	color: rgb(200, 0, 100);
 	font-size: 40pt;
 
 	border-radius: 5px;
-	border: none;
-	border-bottom: 3px solid rgb(100, 0, 0);
-	background: rgb(200, 50, 50);
+	border: 2px solid rgb(200, 0, 100);
+	/*border-bottom: 3px solid rgb(100, 0, 0);*/
+	background: rgb(50, 0, 25);
 }
 
 #controls {
@@ -81,7 +82,7 @@ body {
 
 #map {
 	position: absolute;
-	border: 1px solid rgba(0, 0, 0, 0.4);
+	border: 2px solid rgb(100, 200, 255);
 	top: 75px;
 	right: 5px;
 	border-radius: 5px;
@@ -95,5 +96,5 @@ body {
 }
 
 canvas {
-	/*opacity: 0.9;*/
+	opacity: 0.9;
 }
