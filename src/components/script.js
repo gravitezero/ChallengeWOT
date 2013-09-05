@@ -183,7 +183,7 @@ function Controls() {
       return;
 
     context.translate(25, 25);
-    context.rotate(angle);
+    context.rotate(angle+Math.PI);
 
     context.lineWidth = width;
     context.strokeStyle = 'rgb('+stroke+')';
@@ -196,6 +196,7 @@ function Controls() {
     context.lineTo(0, 0);
     context.stroke();
 
+    context.rotate(-angle-Math.PI);
     context.translate(-25, -25);
   }
 
@@ -217,7 +218,7 @@ function Controls() {
     context.beginPath();
     context.lineTo(0, 0);
     context.arc(0, 0, intensity, Math.PI * -0.15, Math.PI * 0.15);
-    context.arc(0, 0, intensity-5, Math.PI * 0.15, Math.PI * -0.15, true);
+    context.arc(0, 0, Math.max(intensity-5, 0), Math.PI * 0.15, Math.PI * -0.15, true);
     context.fill();
 
     context.beginPath();
