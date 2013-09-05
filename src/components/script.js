@@ -5,7 +5,7 @@ const speedFactor = 1;
 const MaxSpeed = 700;
 
 const background = '0, 25, 50';
-const stroke = '100, 200, 255';
+const stroke = '145, 248, 255';
 const shadow = '50, 150, 255';
 const error = '200, 0, 100';
 const width = 2;
@@ -74,6 +74,27 @@ function Map() {
     canvas.lineWidth = width;
     canvas.fillStyle = 'rgba('+background+', 1)';
     canvas.fillRect(0, 0, this._width, this._height);
+
+
+    canvas.translate(330, 20);
+    canvas.rotate(-o.a-Math.PI);
+
+    canvas.strokeStyle = 'rgba('+stroke+', 0.2)';
+    canvas.beginPath();
+    canvas.arc(0, 0, 13, 0, 2*Math.PI);
+    canvas.stroke();
+
+    canvas.strokeStyle = 'rgb('+stroke+')';
+    canvas.beginPath();
+    canvas.lineTo(0, 5);
+    canvas.lineTo(5, 3);
+    canvas.lineTo(0, 17);
+    canvas.lineTo(-5, 3);
+    canvas.closePath();
+    canvas.stroke();
+
+    canvas.rotate(o.a+Math.PI);
+    canvas.translate(-330, -20);
 
     canvas.translate(this._ox, this._oy);
     canvas.rotate(Math.PI);

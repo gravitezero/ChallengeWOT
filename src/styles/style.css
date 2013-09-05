@@ -27,7 +27,7 @@ body {
 	font-size: 30pt;
 	font-weight: 100;
 	font-family: sans-serif;
-	border-bottom: 2px solid rgb(100, 200, 255);
+	border-bottom: 2px solid rgb(145, 248, 255);
 }
 
 #info #result {
@@ -82,7 +82,7 @@ body {
 
 #map {
 	position: absolute;
-	border: 2px solid rgb(100, 200, 255);
+	border: 2px solid rgb(145, 248, 255);
 	top: 75px;
 	right: 5px;
 	border-radius: 5px;
