@@ -59,32 +59,55 @@ function Map() {
   this.point = function(x, y, accuracy) {
     var o = {x: this._origin.x, y: this._origin.y, a: this._origin.angle};
 
-    this._point.push({
+    this._point.unshift({
       x: o.x + Math.cos(-o.a)*x + Math.sin(-o.a)*y,
       y: o.y + Math.cos(-o.a)*y + Math.sin(-o.a)*x,
-      a: accuracy || 10});
+      a: accuracy || 5});
   }
 
   this._pre = function(o) {
 
-    canvas.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    canvas.fillStyle = 'rgba(2, 10, 0, 0.8)';
+    // canvas.fillStyle = 'rgba(255, 255, 255, 0.5)';
     canvas.fillRect(0, 0, this._width, this._height);
 
     canvas.translate(this._ox, this._oy);
     canvas.rotate(Math.PI);
 
-    canvas.fillStyle = 'rgb(100, 180, 255)';
-    canvas.strokeStyle = 'rgb(50, 100, 250)';
+    canvas.shadowBlur = 20;
+    canvas.shadowColor = 'rgb(100, 255, 50)';
+    // canvas.fillStyle = 'rgb(10, 50, 0)';
+    canvas.strokeStyle = 'rgb(200, 255, 150)';
+    // canvas.fillStyle = 'rgb(100, 180, 255)';
+    // canvas.strokeStyle = 'rgb(50, 100, 250)';
     canvas.beginPath();
     canvas.lineTo(10, -10);
     canvas.lineTo(0, 15);
     canvas.lineTo(-10, -10);
-    canvas.fill();
+    // canvas.fill();
     canvas.stroke();
     canvas.closePath();
 
     canvas.rotate(-o.a);
     canvas.translate(-o.x, -o.y);
+
+    canvas.strokeStyle = 'rgba(200, 255, 150, 0.2)';
+
+
+    // console.log(this._origin.x - this._origin.x%100);
+    // console.log(this._origin.y - this._origin.y%100);
+
+    for (var i = 0; i < 5; i++) {
+
+      var x = this._origin.x - this._origin.x%100;
+      var y = this._origin.y - this._origin.y%100;
+
+      canvas.strokeRect(x - 500, y - (100*(i-2)), 1000, 0);
+      canvas.strokeRect(x - (100*(i-2)), y - 500, 0, 1000);
+    };
+
+  
+
   }
 
   this._post = function(o) {
@@ -99,12 +122,17 @@ function Map() {
   }
 
   this._displayPoints = function() {
-    canvas.strokeStyle = 'rgb(100, 100, 100)';
-
+    var j = 1;
     for (var i in this._point) { var p = this._point[i];
+      canvas.strokeStyle = 'rgba(200, 255, 150, '+ j +')';
+      // canvas.strokeStyle = 'rgba(0, 0, 0, '+ j +')';
+      j -= 0.01;
+      if (j === 0)
+        return;
       canvas.beginPath();
       canvas.arc(p.x, p.y, p.a, 0, Math.PI*2);
       canvas.stroke();
+
     }
   }
 
@@ -123,11 +151,6 @@ function Map() {
 var map = Map();
 setInterval(map.draw, 100);
 
-map.point(50, 40, 5);
-map.point(-40, 50, 5);
-map.point(50, -40, 5);
-map.point(-30, -60, 5);
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      controls                                                                                             //
@@ -142,6 +165,10 @@ function Controls() {
 
   this.setColor = function(r, g, b) {
     var context = color.getContext('2d');
+    context.clearRect(0, 0, 50, 50);
+
+    if (r === undefined)
+      return;
 
     context.fillStyle = 'rgb('+r+', '+g+', '+b+')';
     context.beginPath();
@@ -155,6 +182,9 @@ function Controls() {
 
     var context = compass.getContext('2d');
     context.clearRect(0, 0, 50, 50);
+
+    if (angle === undefined)
+      return;
 
     context.translate(25, 25);
     context.rotate(angle);
@@ -179,6 +209,9 @@ function Controls() {
 
     var context = ultrasonic.getContext('2d');
     context.clearRect(0, 0, 50, 50);
+
+    if (intensity === undefined)
+      return;
 
     context.translate(25, 50);
     context.rotate(Math.PI * -0.5);
@@ -450,6 +483,7 @@ var keyPressed = function(doClass) {
         case 38: map.translate(0, 10); break; // up
         case 39: map.rotate(-Math.PI/10); break; // right
         case 40: map.translate(0, -10); break; // down
+        case 32: map.point(0, 50); break; // space
       }
 
     }
@@ -460,7 +494,7 @@ $(document).keyup(keyPressed('removeClass'));
 
 var keytochar = function(key) {
     switch (key) {
-      case 32: return '_';
+      case 32: return '_'; // space
       case 37: return "→"; // left
       case 38: return "↑ "; // up
       case 39: return "←"; // right
