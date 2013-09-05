@@ -32,7 +32,9 @@ function parser(data) {
 
 function Map() {
 
-  console.log('map');
+  const background = '0, 25, 50';
+  const stroke = '100, 200, 255';
+  const shadow = '50, 150, 255';
 
   var canvas = document.getElementById('map').getContext('2d');
 
@@ -67,35 +69,27 @@ function Map() {
 
   this._pre = function(o) {
 
-    canvas.fillStyle = 'rgba(2, 10, 0, 0.8)';
-    // canvas.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    canvas.lineWidth = 2;
+    canvas.fillStyle = 'rgba('+background+', 1)';
     canvas.fillRect(0, 0, this._width, this._height);
 
     canvas.translate(this._ox, this._oy);
     canvas.rotate(Math.PI);
 
     canvas.shadowBlur = 20;
-    canvas.shadowColor = 'rgb(100, 255, 50)';
-    // canvas.fillStyle = 'rgb(10, 50, 0)';
-    canvas.strokeStyle = 'rgb(200, 255, 150)';
-    // canvas.fillStyle = 'rgb(100, 180, 255)';
-    // canvas.strokeStyle = 'rgb(50, 100, 250)';
+    canvas.shadowColor = 'rgb('+shadow+')';
+    canvas.strokeStyle = 'rgb('+stroke+')';
     canvas.beginPath();
     canvas.lineTo(10, -10);
     canvas.lineTo(0, 15);
     canvas.lineTo(-10, -10);
-    // canvas.fill();
     canvas.stroke();
     canvas.closePath();
 
     canvas.rotate(-o.a);
     canvas.translate(-o.x, -o.y);
 
-    canvas.strokeStyle = 'rgba(200, 255, 150, 0.2)';
-
-
-    // console.log(this._origin.x - this._origin.x%100);
-    // console.log(this._origin.y - this._origin.y%100);
+    canvas.strokeStyle = 'rgba('+stroke+', 0.2)';
 
     for (var i = 0; i < 5; i++) {
 
@@ -124,7 +118,7 @@ function Map() {
   this._displayPoints = function() {
     var j = 1;
     for (var i in this._point) { var p = this._point[i];
-      canvas.strokeStyle = 'rgba(200, 255, 150, '+ j +')';
+      canvas.strokeStyle = 'rgba('+stroke+', '+ j +')';
       // canvas.strokeStyle = 'rgba(0, 0, 0, '+ j +')';
       j -= 0.01;
       if (j === 0)
