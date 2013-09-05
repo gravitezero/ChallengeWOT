@@ -11,7 +11,8 @@ html {
 }
 
 body {
-	background-color: #EEE;
+	/*background-color: #EEE;*/
+	background: url('../Logo-ARC6.jpg') bottom left no-repeat;
 	width: 100%;
 	height: 100%;
 }
