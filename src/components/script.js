@@ -1,7 +1,7 @@
 const ControlFreq = 1/30 * 1000;
 const SensorsFreq = 300;
 const host = '192.168.8.123';
-const speedFactor = 1;
+const speedFactor = 4;
 const MaxSpeed = 700;
 
 const background = '0, 25, 50';
@@ -286,9 +286,9 @@ ws = new WebSocket("ws://" + host + ":8080/NXTWebSocketServer/socket");
 
 ws.onopen = function(event) {
 	console.log("Connected to the websocket server");
-  // robot.connect(function() {
-  //   consonle.log('robot connected');
-  // });
+  robot.connect(function() {
+    consonle.log('robot connected');
+  });
 };
 
 ws.onmessage = function(event) {
@@ -442,39 +442,18 @@ setInterval(function(){
   var dy = joystick.deltaY();
 
   outputEl.innerHTML  = dx + '   ' + dy;
-  if (dx !== 0)
+  if (robot.isConnected)
     robot.motors(toMotorControls(dx, dy));
 
 }, ControlFreq);
 
 var toMotorControls = function(dx, dy) {
 
-  speed = Math.sqrt(dx * dx + dy * dy);
+  left = (Math.cos(3*Math.PI/8) * dx - Math.sin(3*Math.PI/8) * dy) * speedFactor;
+  left = Math.max(-MaxSPeed, Math.min(MaxSPeed,left));
 
-  if (dx > 0 && dy < 0) {
-    theta = Math.atan(dx / dy);
-
-    console.log(MaxSpeed, speed, theta);
-
-    left = MaxSpeed * speed / 600 ;
-    right = MaxSpeed * speed / 600 * (-(Math.PI/2) + 2*theta)/ (Math.PI/2);
-  }
-  else {
-    left = 0;
-    right = 0;
-  }
-
-
-  // if dx = 0, full speed on both motors
-  // if dx /= 0, dy = 0, full speed on one motor
-
-  // var turnLeft = Math.min(1, 1 + (dx / 255));
-  // var turnRight = Math.min(1, 1 - (dx / 255));
-
-  // var left = Math.floor(speed * speedFactor * turnLeft);
-  // var right = Math.floor(speed * speedFactor * turnRight);
-
-  console.log(left, right);
+  right = (Math.sin(Math.PI/8) * dx + Math.cos(Math.PI/8) * dy) * speedFactor;
+  right = Math.max(-MaxSPeed, Math.min(MaxSPeed,right));
 
   return [Math.floor(left), Math.floor(right)];
 }
