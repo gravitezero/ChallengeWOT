@@ -168,7 +168,7 @@ function Controls() {
 
     context.fillStyle = 'rgb('+r+', '+g+', '+b+')';
     context.beginPath();
-    context.arc(25, 25, 25, 0, 2*Math.PI, false);
+    context.arc(25, 25, 25, 0, 2*Math.PI);
     context.fill();
   }
 
@@ -186,14 +186,19 @@ function Controls() {
     context.rotate(angle+Math.PI);
 
     context.lineWidth = width;
-    context.strokeStyle = 'rgb('+stroke+')';
 
+    context.strokeStyle = 'rgba('+stroke+', 0.2)';
     context.beginPath();
-    context.lineTo(0, 0);
-    context.lineTo(9, -5);
+    context.arc(0, 0, 17, 0, 2*Math.PI);
+    context.stroke();
+
+    context.strokeStyle = 'rgb('+stroke+')';
+    context.beginPath();
+    context.lineTo(0, 10);
+    context.lineTo(9, 5);
     context.lineTo(0, 25);
-    context.lineTo(-9, -5);
-    context.lineTo(0, 0);
+    context.lineTo(-9, 5);
+    context.closePath();
     context.stroke();
 
     context.rotate(-angle-Math.PI);
@@ -246,7 +251,7 @@ var controls = new Controls();
 // }, 1000);
 
 // setInterval(function() {
-  controls.setCompass(Math.random() * 360);
+  controls.setCompass(0);
 // }, 1000);
 
 
@@ -477,9 +482,9 @@ var keyPressed = function(doClass) {
 
     if (doClass === 'addClass')
       switch (evt.keyCode) {
-        case 37: map.rotate(Math.PI/10); break; // left
+        case 37: map.rotate(Math.PI/10); controls.setCompass(map._origin.angle * 180 / Math.PI); break; // left
         case 38: map.translate(0, 10); break; // up
-        case 39: map.rotate(-Math.PI/10); break; // right
+        case 39: map.rotate(-Math.PI/10); controls.setCompass(map._origin.angle * 180 / Math.PI); break; // right
         case 40: map.translate(0, -10); break; // down
         case 32: map.point(0, 50); break; // space
       }
