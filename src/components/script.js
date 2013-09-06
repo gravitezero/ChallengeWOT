@@ -66,9 +66,10 @@ function Map() {
   this._height = 200;
 
   this._ox = this._width /2;
-  this._oy = this._height /1.1;
+  this._oy = this._height /1.5;
 
   this._point = [];
+  this._trace = [];
   this._origin = {x: 0, y:0, angle:0};
 
   this.getPosFromDist = function(d) {
@@ -83,9 +84,23 @@ function Map() {
   this.translate = function(x, y) {
 
     var a = this._origin.angle;
-    
+
     this._origin.x += Math.cos(-a)*x + Math.sin(-a)*y;
     this._origin.y += Math.cos(-a)*y + Math.sin(-a)*x;
+
+    if (this._trace.length !== 0) {
+      var lastPoint = this._trace[0];
+      console.log('>>> lastPoint ',lastPoint.x,' ', lastPoint.y);
+      console.log('>>> origin ',this._origin.x,' ', this._origin.y);
+
+      var d = Math.abs(lastPoint.x - this._origin.x) + Math.abs(lastPoint.y - this._origin.y);
+    }    
+
+    console.log('>>> d : ', d);
+
+    if (this._trace.length === 0 || d > 5) {
+      this._trace.unshift({x: this._origin.x, y: this._origin.y});
+    }
   }
 
   this.rotate = function(angle) {
@@ -170,8 +185,21 @@ function Map() {
     canvas.clearRect(0,0, 500, 500);
   }
 
-  this._displayPoints = function() {
+  this._displayPoints = function(o) {
     var j = 1;
+
+    canvas.beginPath()
+    for (var i in this._trace) { var p = this._trace[i];
+      canvas.strokeStyle = 'rgb('+stroke+', '+ j +')';
+      j -= 0.01;
+      if (j === 0)
+        return;
+      canvas.lineTo(p.x, p.y);
+      canvas.stroke();
+    };
+
+    canvas.lineTo(o.x, o.y);
+
     for (var i in this._point) { var p = this._point[i];
       canvas.strokeStyle = 'rgba('+stroke+', '+ j +')';
       // canvas.strokeStyle = 'rgba(0, 0, 0, '+ j +')';
@@ -191,7 +219,7 @@ function Map() {
 
     this._clear();
     this._pre(o);
-    this._displayPoints();
+    this._displayPoints(o);
     this._post(o);
   }
 
@@ -439,20 +467,27 @@ function NXT() {
     if (!motors)
       return;
 
-    // console.log('motors good');
-
     if (mutex)
       return;
-
-    // console.log('no mutex');
-
-    // mutex = true;
 
     if(this._lastCommand) {
       var dt = Date.now() - this._lastCommand;
       var d = this._speed * dt * translateFactor * 0.000001;
 
-      // console.log(">>> motors ", d);
+      if (!auto && motors[0] !== motors[1]) {
+        var tetha = (motors[0] - motors[1])*dt/1000 / 4;
+        
+        console.log('>>> theta             : ', theta);
+        // theta = theta / 180 * Math.PI; // to radian
+        // map.rotate(theta);
+        controls.setcompass(map._origin.a += theta);
+
+        // if (motors[0] > motors[1]) { // anti trigo
+        //   map.rotate(-theta);
+        // } else { // trigo
+        //   map.rotate(theta)
+        // }
+      }
 
       map.translate(0, d);
     }
@@ -534,33 +569,39 @@ function NXT() {
     if (auto)
       robot.sensors(autoSensors);
 
-    var dr=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-115)*(c.g-115) + (c.b- 80)*(c.b- 80));
-    var dg=Math.sqrt( (c.r-130)*(c.r-130) + (c.g-170)*(c.g-170) + (c.b- 90)*(c.b- 90));
-    var dw=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-240)*(c.g-240) + (c.b-200)*(c.b-200));
-    var db=Math.sqrt( (c.r-60)*(c.r-60) + (c.g-60)*(c.g-60) + (c.b-60)*(c.b-60));
+    // var dr=Math.sqrt( (c.r-230)*(c.r-230) + (c.g-100)*(c.g-100) + (c.b- 60)*(c.b- 60));
+    // var dg=Math.sqrt( (c.r-120)*(c.r-120) + (c.g-200)*(c.g-200) + (c.b- 90)*(c.b- 90));
+    // var dw=Math.sqrt( (c.r-250)*(c.r-250) + (c.g-240)*(c.g-240) + (c.b-190)*(c.b-190));
+    // var db=Math.sqrt( (c.r-60)*(c.r-60) + (c.g-60)*(c.g-60) + (c.b-60)*(c.b-60));
+
+    var m = (c.r + c.g + c.b) /3;
+    var s = 20;
+
+    // dw=dw*4;
     
-    dw=dw*4;
+    var step = 40;
+    var speed = 80;
     
-    var step = 50;
-    var speed = 100;
-    
-    if (dr<dg && dr<dw && dr<db){  // RED
+    if (m < c.r - s){  // RED
+    // if (dr<dg && dr<dw && dr<db){  // RED
        //console.log("red");
        if (countR==0) robot.motors([step,-step]);
-       else robot.motors([countR*step-20,-countR*step]);
+       else robot.motors([countR*10 + step, 0]);
        if (countR<3) countR++;
        countG=0;
     }
     else{
-        if (dg<dw && dr<db){  // GREEN
+        if (m < c.g -s){  // GREEN
+        // if (dg<dw && dr<db){  // GREEN
              //console.log("green");
              if (countG==0) robot.motors([-step,step]);
-             else  robot.motors([-countG*step,countG*step-20]);
+             else  robot.motors([0,countG*10 + step]);
              if (countG<3) countG++;
              countR=0;
         }
         else{
-           if (dw<db){  // WHITE
+           if (m > 120){  // WHITE
+           // if (dw<db){  // WHITE
            //console.log("white");
            robot.motors([speed,speed]);
            countG=0;
