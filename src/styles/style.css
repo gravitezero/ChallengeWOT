@@ -98,7 +98,7 @@ body {
 
 #address {
 	/*line-height: 50px;*/
-	height: 50px;
+	height: 54px;
 	width: 50px;
 	vertical-align: top;
 	padding: 0 10px;
@@ -106,7 +106,9 @@ body {
 	color: rgb(145, 248, 255);
 	font-size: 10pt;
 
-	text-align: right;
+	text-align: left;
+	direction: rtl;
+
 
 	border-radius: 5px;
 	border: 2px solid rgb(145, 248, 255);
