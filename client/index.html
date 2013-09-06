@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <!-- <link rel="stylesheet" type="text/css" href="styles/style.css" /> -->
+        <!-- <link rel="shortcut icon" href="favicon.ico" /> -->
+        <title>NXT Client</title>
+    </head>
+	<body>
+	</body>
+
+	<script>
+		function onCameraFail(e){
+        	alert("Failed getting media");
+	    }
+
+	    if (navigator.webkitGetUserMedia) {
+	            alert("getMedia supported");
+	            navigator.webkitGetUserMedia({video:true}, function (stream) {
+	                alert("Got media");
+	            }, onCameraFail);
+	            alert("after getMedia");
+	    }else{  
+	        //Old device, no support for providing a photo
+	        alert("No support for getUserMedia");           
+	    }
+	</script>
+</html>

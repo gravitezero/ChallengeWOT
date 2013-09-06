@@ -1,0 +1,333 @@
+1,3c1,3
+< const ControlFreq = 700;
+< const SensorsFreq = 700;
+< const host = '192.168.2.4';
+---
+> const ControlFreq = 280;
+> const SensorsFreq = 280;
+> const host = '192.168.2.5';
+5c5
+< const MaxSpeed = 200;
+---
+> const MaxSpeed = 400;
+14a15,17
+> var countG=0;
+> var countR=0;
+> 
+16d18
+< var ws = undefined;
+57,65d58
+<   this.getPosFromDist = function(d) {
+<     var a = this._origin.angle;
+<     
+<     return [
+<       this._origin.x + Math.sin(-a)*d,
+<       this._origin.y + Math.cos(-a)*d
+<     ];
+<   }
+< 
+67d59
+< 
+172,173c164
+<     var pos = robot.getPos();
+<     var o = {x: pos.x, y: pos.y, a: this._origin.angle}; // NOT an error, we need the same value for pre and post processing.
+---
+>     var o = {x: this._origin.x, y: this._origin.y, a: this._origin.angle}; // NOT an error, we need the same value for pre and post processing.
+199c190
+<   this.setcolor = function(color) {
+---
+>   this.setcolor = function(c) {
+203c194
+<     if (r === undefined)
+---
+>     if (c === undefined)
+206c197,236
+<     context.fillStyle = 'rgb('+color.r+', '+color.g+', '+color.b+')';
+---
+>     context.fillStyle = 'rgb('+c.r+', '+c.g+', '+c.b+')';
+>     console.log(c.r,c.g,c.b);
+> 
+> var dr=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-115)*(c.g-115) + (c.b- 80)*(c.b- 80));
+> var dg=Math.sqrt( (c.r-130)*(c.r-130) + (c.g-170)*(c.g-170) + (c.b- 90)*(c.b- 90));
+> var dw=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-240)*(c.g-240) + (c.b-200)*(c.b-200));
+> var db=Math.sqrt( (c.r-60)*(c.r-60) + (c.g-60)*(c.g-60) + (c.b-60)*(c.b-60));
+> 
+> dw=dw*4;
+> 
+> var step = 50;
+> var speed = 100;
+> 
+> if (dr<dg && dr<dw && dr<db){ 
+>    //console.log("red");
+>    if (countR==0) robot._motors([step,-step]);
+>    else robot._motors([countR*step-20,-countR*step]);
+>    if (countR<3) countR++;
+>    countG=0;
+> }
+> else{
+>     if (dg<dw && dr<db){
+>          //console.log("green");
+>          if (countG==0) robot._motors([-step,step]);
+>          else  robot._motors([-countG*step,countG*step-20]);
+>          if (countG<3) countG++;
+>          countR=0;
+>     }
+>     else{
+>        if (dw<db){
+>        //console.log("white");
+>        robot._motors([speed,speed]);
+>        countG=0;
+>        countR=0;
+>        }
+>        else{
+>            robot._motors([0,0]);
+>        }
+>     }
+> }
+216c246
+<     angle = angle / 180 * Math.PI; // to radian
+---
+>     console.log(angle);
+217a248,249
+>     angle = angle / 180 * Math.PI; // to radian
+> 	
+254,256c286
+<     var pos = robot.getPos();
+< 
+<     map.point(pos.x, pos.y + intensity * 3);
+---
+>     map.point(0, intensity * 3);
+287,291c317,327
+< ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+< //      websocket                                                                                            //
+< ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+< 
+< var button = $('button');
+---
+> // setInterval(function() {
+>   // controls.setcolor(10, 120, Math.floor(Math.random() * 255));
+> // }, 1000);
+> 
+> // setInterval(function() {
+>   // controls.setultrasonic(Math.floor(Math.random() *255));
+> // }, 1000);
+> 
+> // setInterval(function() {
+>   // controls.setcompass(0);
+> // }, 1000);
+294d329
+< // document.getElementById('disconnect').addEventListener('click', robot.disconnect);
+296d330
+< button.click(function(){
+298,318c332,334
+<   if(button.hasClass('disconnect')) {
+<     robot.disconnect();
+<   }
+< 
+<   if(button.hasClass('pending'))
+<     return;
+< 
+<   button.removeClass('connect').addClass('pending');
+< 
+<   console.log($('address').text);
+< 
+<   ws = new WebSocket("ws://" + $('address').text + ":8080/NXTWebSocketServer/socket");
+< 
+<   ws.onopen = function(event) {
+<     console.log("Connected to the websocket server");
+<     robot.connect(function() {
+<       console.log("robot connected");
+<       button.removeClass('pending').addClass('disconnect');
+<       robot.pollSensors(['ultrasonic', 'compass']);
+<     });
+<   };
+---
+> ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+> //      websocket                                                                                            //
+> ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+320,321c336
+<   ws.onmessage = function(event) {
+<     // console.log("Incoming data : " + event.data);
+---
+> ws = new WebSocket("ws://" + host + ":8080/NXTWebSocketServer/socket");
+323,326c338,364
+<     try {
+<       response = JSON.parse(event.data);
+<     } catch(e) {
+<       response = parser(event.data);
+---
+> ws.onopen = function(event) {
+> 	console.log("Connected to the websocket server");
+>   robot.connect(function() {
+>     console.log("robot connected");
+>     robot.sensors(['color','compass']);
+>   });
+> };
+> 
+> ws.onmessage = function(event) {
+> 	// console.log("Incoming data : " + event.data);
+> 
+>   try {
+>     response = JSON.parse(event.data);
+>   } catch(e) {
+>     response = parser(event.data);
+>   }
+> 
+>   if(response.status === "connected")
+>     robot.isConnected(true);
+> 
+>   if(response.status === "disconnected")
+>     robot.isConnected(false);
+> 
+>   if( response.sensor_response) {
+>     robot.sensors(['color','compass']);
+>     for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
+>       robot.setSensorValue(sensor.name, sensor.value);
+327a366
+>   }
+329,340c368
+<     if(response.status === "connected")
+<       robot.isConnected(true);
+< 
+<     if(response.status === "disconnected")
+<       robot.isConnected(false);
+< 
+<     if( response.sensor_response)
+<       for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
+<         robot.setSensorValue(sensor.name, sensor.value);
+<       }
+< 
+<     // We received sensors data, update stuffs
+---
+>   // We received sensors data, update stuffs
+342,351c370
+<   };
+< 
+<   ws.onclose = function(event) {
+<     console.log("Disconnected to the websocket server");
+<   };
+< });
+< 
+< ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+< //      NXT                                                                                                  //
+< ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+---
+> };
+352a372,374
+> ws.onclose = function(event) {
+> 	console.log("Disconnected to the websocket server");
+> };
+371c393
+<     console.log('>>>  ' + cmd);
+---
+>    // console.log('>>>  ' + cmd);
+375,378c397
+<   this.disconnect = function() {
+<     robot.motors([0, 0]);
+<     _sendCMD('{"action": "disconnect"}');
+<   }
+---
+>   this.disconnect = _CMDFactory('{"action": "disconnect"}');
+392,400d410
+<   this.getPos = function() {
+<     if(!mutex)
+<       return map._origin;
+< 
+<     var dt = Date.now() - this._lastCommand;
+<     return map.getPosFromDist(dt * this._speed);
+< 
+<   }
+< 
+404,405c414
+<     if (!motors)
+<       return;
+---
+>     var d = translateFactor * (motors[0] + motors[1])/2 * ControlFreq * 0.2;
+407,414c416,418
+<     if (mutex)
+<       return;
+< 
+<     mutex = true;
+< 
+<     if(this;_lastCommand) {
+<       var dt = Date.now() - this._lastCommand;
+<       var d = this._speed * dt * translateFactor * 0.2;
+---
+>     var dx = 0;
+>     var dy = d;
+>     map.translate(dx, dy);
+416,422c420
+<       console.log(">>> motors ", d);
+< 
+<       map.translate(0, d);
+<     }
+< 
+<     this._lastCommand = Date.now();
+<     this._speed = (motors[0] + motors[1]) / 2;
+---
+>     // this._lastCommand = Date.now();
+433,434d430
+<     if (!motors)
+<       return;
+440d435
+<     this._speed = (motors[0][1] + motors[1][1]) / 2;
+443c438
+<     var dt = motors[0][0] / motors[0][1];
+---
+>     dt = motors[0][0] / motors[0][1];
+446c441
+<       console.log("action finished");
+---
+>       //console.log("action finished");
+448d442
+<       map.translate(0, dt * this._speed * 0.01);
+457a452,460
+> this._motors = function(motors) {
+> 
+>     if (motors[0] === motors[1])
+>       _sendCMD('{"motor_command":[{"name": "both", "action": "start",  "speed": ' + motors[0] + '}]}');
+>     else
+>       _sendCMD('{"motor_command":[{"name": "left", "action": "start",  "speed": ' + motors[0] + '}, {"name": "right", "action": "start",  "speed": ' + motors[1] + '}]}');
+> 
+>   }
+> 
+496c499
+<       // console.log('>>>  ' + cmd);
+---
+>       //console.log('>>>  ' + cmd);
+503a507,508
+> 
+> 	//console.log(cmd);
+510a516,518
+> 
+> document.getElementById('disconnect').addEventListener('click', robot.disconnect);
+> 
+529,531c537,538
+<   if (robot.isConnected)
+<     robot.motors(toMotorControls(dx, dy));
+<     // robot.motorsStep(toMotorStep(joystick));
+---
+>   //if (robot.isConnected)
+>     //robot.motors(toMotorControls(dx, dy));
+546,549d552
+< var toMotorStep = function(joystick) {
+< 
+<   const speed = 200;
+<   const step = 100;
+551,561d553
+<   if(joystick.up())
+<     return [[step, speed], [step, speed]];
+< 
+<   if(joystick.right())
+<     return [[-step, speed], [step, speed]];
+< 
+<   if(joystick.left())
+<     return [[step, speed], [-step, speed]];
+< 
+<   return undefined;
+< }
+617c609
+< } 
+\ No newline at end of file
+---
+> } 

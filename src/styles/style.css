@@ -58,17 +58,57 @@ body {
 	display: none;
 }
 
-#disconnect {
+.disconnect {
 	line-height: 50px;
-	width: 60px;
+	width: 50px;
 
 	color: rgb(200, 0, 100);
-	font-size: 40pt;
+	font-size: 30pt;
 
 	border-radius: 5px;
 	border: 2px solid rgb(200, 0, 100);
-	/*border-bottom: 3px solid rgb(100, 0, 0);*/
 	background: rgb(50, 0, 25);
+}
+
+.connect {
+	line-height: 50px;
+	width: 50px;
+
+	color: rgb(145, 248, 255);
+	font-size: 30pt;
+
+	border-radius: 5px;
+	border: 2px solid rgb(145, 248, 255);
+	background: rgb(0, 25, 50);
+}
+
+.pending {
+	line-height: 50px;
+	width: 50px;
+
+	color: rgb(145, 248, 255);
+	font-size: 30pt;
+
+	border-radius: 5px;
+	border: 2px solid rgb(145, 248, 255);
+	background: rgb(0, 25, 50);
+
+	opacity: 0.2;
+}
+
+#address {
+	/*line-height: 50px;*/
+	height: 56px;
+	width: 100px;
+	vertical-align: top;
+	padding: 0 10px;
+
+	color: rgb(145, 248, 255);
+	font-size: 10pt;
+
+	border-radius: 5px;
+	border: 2px solid rgb(145, 248, 255);
+	background: rgb(0, 25, 50);
 }
 
 #controls {

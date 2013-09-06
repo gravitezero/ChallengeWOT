@@ -1,9 +1,10 @@
-const ControlFreq = 700;
-const SensorsFreq = 700;
-const host = '192.168.2.4';
-const speedFactor = 1;
-const MaxSpeed = 200;
+const ControlFreq = 280;
+const SensorsFreq = 280;
+const host = '192.168.2.5';
+const speedFactor = 4;
+const MaxSpeed = 400;
 const translateFactor = 45.6;
+
 
 const background = '0, 25, 50';
 const stroke = '145, 248, 255';
@@ -11,26 +12,10 @@ const shadow = '50, 150, 255';
 const error = '200, 0, 100';
 const width = 2;
 
-const autoSensors = [
-  'color'
-  // ,'compass'
-  // ,'ultrasonic'
-];
-const manuSensors = [
-  'color'
-  ,'compass'
-  ,'ultrasonic'
-];
-
-var auto = false;
 var countG=0;
 var countR=0;
 
-var sonarFactor = 1;
-var sonarOffset = 0;
-
 var mutex = false;
-// var ws = new WebSocket();
 
 function capital(string)
 {
@@ -71,17 +56,7 @@ function Map() {
   this._point = [];
   this._origin = {x: 0, y:0, angle:0};
 
-  this.getPosFromDist = function(d) {
-    var a = this._origin.angle;
-    
-    return [
-      this._origin.x + Math.sin(-a)*d,
-      this._origin.y + Math.cos(-a)*d
-    ];
-  }
-
   this.translate = function(x, y) {
-
     var a = this._origin.angle;
     
     this._origin.x += Math.cos(-a)*x + Math.sin(-a)*y;
@@ -186,8 +161,7 @@ function Map() {
   }
 
   this.draw = function() {
-    var pos = robot.getPos();
-    var o = {x: pos.x, y: pos.y, a: this._origin.angle}; // NOT an error, we need the same value for pre and post processing.
+    var o = {x: this._origin.x, y: this._origin.y, a: this._origin.angle}; // NOT an error, we need the same value for pre and post processing.
 
     this._clear();
     this._pre(o);
@@ -220,10 +194,46 @@ function Controls() {
     if (c === undefined)
       return;
 
-    if (auto)
-      robot.sendNextCommand(c);
-
     context.fillStyle = 'rgb('+c.r+', '+c.g+', '+c.b+')';
+    console.log(c.r,c.g,c.b);
+
+var dr=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-115)*(c.g-115) + (c.b- 80)*(c.b- 80));
+var dg=Math.sqrt( (c.r-130)*(c.r-130) + (c.g-170)*(c.g-170) + (c.b- 90)*(c.b- 90));
+var dw=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-240)*(c.g-240) + (c.b-200)*(c.b-200));
+var db=Math.sqrt( (c.r-60)*(c.r-60) + (c.g-60)*(c.g-60) + (c.b-60)*(c.b-60));
+
+dw=dw*4;
+
+var step = 50;
+var speed = 100;
+
+if (dr<dg && dr<dw && dr<db){ 
+   //console.log("red");
+   if (countR==0) robot._motors([step,-step]);
+   else robot._motors([countR*step-20,-countR*step]);
+   if (countR<3) countR++;
+   countG=0;
+}
+else{
+    if (dg<dw && dr<db){
+         //console.log("green");
+         if (countG==0) robot._motors([-step,step]);
+         else  robot._motors([-countG*step,countG*step-20]);
+         if (countG<3) countG++;
+         countR=0;
+    }
+    else{
+       if (dw<db){
+       //console.log("white");
+       robot._motors([speed,speed]);
+       countG=0;
+       countR=0;
+       }
+       else{
+           robot._motors([0,0]);
+       }
+    }
+}
     context.beginPath();
     context.arc(25, 25, 25, 0, 2*Math.PI);
     context.fill();
@@ -233,8 +243,10 @@ function Controls() {
     if (angle === undefined)
       return;
 
-    angle = angle / 180 * Math.PI; // to radian
+    console.log(angle);
 
+    angle = angle / 180 * Math.PI; // to radian
+	
     var context = compass.getContext('2d');
     context.clearRect(0, 0, 50, 50);
 
@@ -271,10 +283,7 @@ function Controls() {
     if (intensity === undefined)
       return;
 
-    var pos = robot.getPos();
-
-    map.point(0, (intensity * 3)*sonarFactor + sonarOffset);
-    // map.point(pos.x, pos.y + (intensity * 3)*sonarFactor + sonarOffset);
+    map.point(0, intensity * 3);
 
     context.translate(25, 50);
     context.rotate(Math.PI * -0.5);
@@ -305,84 +314,64 @@ function Controls() {
 
 var controls = new Controls();
 
+// setInterval(function() {
+  // controls.setcolor(10, 120, Math.floor(Math.random() * 255));
+// }, 1000);
+
+// setInterval(function() {
+  // controls.setultrasonic(Math.floor(Math.random() *255));
+// }, 1000);
+
+// setInterval(function() {
+  // controls.setcompass(0);
+// }, 1000);
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      websocket                                                                                            //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var autoButton = $('#auto');
-autoButton.click(function() {
+ws = new WebSocket("ws://" + host + ":8080/NXTWebSocketServer/socket");
 
-  if(auto) {
-    robot.pollSensors(manuSensors);
-    auto = false;
-    autoButton.removeClass('disconnect').addClass('connect');
-  } else {
-    robot.clearPoll();
-    robot.sensors(autoSensors);
-    auto = true;
-    autoButton.removeClass('connect').addClass('disconnect');
+ws.onopen = function(event) {
+	console.log("Connected to the websocket server");
+  robot.connect(function() {
+    console.log("robot connected");
+    robot.sensors(['color','compass']);
+  });
+};
+
+ws.onmessage = function(event) {
+	// console.log("Incoming data : " + event.data);
+
+  try {
+    response = JSON.parse(event.data);
+  } catch(e) {
+    response = parser(event.data);
   }
 
-});
+  if(response.status === "connected")
+    robot.isConnected(true);
 
-var button = $('#button');
-button.click(function(){
+  if(response.status === "disconnected")
+    robot.isConnected(false);
 
-  if(button.hasClass('disconnect')) {
-    robot.disconnect();
-    button.removeClass('disconnect').addClass('connect');
-    return;
-  }
-
-  if(button.hasClass('pending'))
-    return;
-
-  button.removeClass('connect').addClass('pending');
-
-  ws = new WebSocket("ws://" + $('#address').val() + ":8080/NXTWebSocketServer/socket");
-
-  ws.onopen = function(event) {
-    console.log("Connected to the websocket server");
-    robot.connect(function() {
-      console.log("robot connected");
-      button.removeClass('pending').addClass('disconnect');
-      robot.pollSensors(['ultrasonic', 'compass']);
-    });
-  };
-
-  ws.onmessage = function(event) {
-    // console.log("Incoming data : " + event.data);
-
-    try {
-      response = JSON.parse(event.data);
-    } catch(e) {
-      response = parser(event.data);
+  if( response.sensor_response) {
+    robot.sensors(['color','compass']);
+    for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
+      robot.setSensorValue(sensor.name, sensor.value);
     }
+  }
 
-    if(response.status === "connected")
-      robot.isConnected(true);
+  // We received sensors data, update stuffs
 
-    if(response.status === "disconnected")
-      robot.isConnected(false);
+};
 
-    if( response.sensor_response)
-      for (var i in response.sensor_response) { var sensor = response.sensor_response[i];
-        robot.setSensorValue(sensor.name, sensor.value);
-      }
-
-    // We received sensors data, update stuffs
-
-  };
-
-  ws.onclose = function(event) {
-    console.log("Disconnected to the websocket server");
-  };
-});
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//      NXT                                                                                                  //
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+ws.onclose = function(event) {
+	console.log("Disconnected to the websocket server");
+};
 
 function NXT() {
 
@@ -401,13 +390,11 @@ function NXT() {
   this.connect = function(callback) {
     this._callback = callback;
     var cmd = '{"action": "connect", "mode": "bt"}';
+   // console.log('>>>  ' + cmd);
     _sendCMD(cmd);
   }
 
-  this.disconnect = function() {
-    robot.motors([0, 0]);
-    _sendCMD('{"action": "disconnect"}');
-  }
+  this.disconnect = _CMDFactory('{"action": "disconnect"}');
 
   this._isConnected = false;
   this._callback = undefined;
@@ -421,41 +408,16 @@ function NXT() {
     this._callback = undefined;
   }
 
-  this.getPos = function() {
-    if(!mutex)
-      return map._origin;
-
-    var dt = Date.now() - this._lastCommand;
-    return map.getPosFromDist(dt * this._speed);
-
-  }
-
   this.motors = function(motors) {
     // [left, right]
 
-    if (!motors)
-      return;
+    var d = translateFactor * (motors[0] + motors[1])/2 * ControlFreq * 0.2;
 
-    // console.log('motors good');
+    var dx = 0;
+    var dy = d;
+    map.translate(dx, dy);
 
-    if (mutex)
-      return;
-
-    // console.log('no mutex');
-
-    // mutex = true;
-
-    if(this._lastCommand) {
-      var dt = Date.now() - this._lastCommand;
-      var d = this._speed * dt * translateFactor * 0.000001;
-
-      // console.log(">>> motors ", d);
-
-      map.translate(0, d);
-    }
-
-    this._lastCommand = Date.now();
-    this._speed = (motors[0] + motors[1]) / 2;
+    // this._lastCommand = Date.now();
 
     if (motors[0] === motors[1])
       _sendCMD('{"motor_command":[{"name": "both", "action": "start",  "speed": ' + motors[0] + '}]}');
@@ -466,28 +428,33 @@ function NXT() {
 
   this.motorsStep = function(motors) {
     // [[leftstep, leftspeed], [rightstep, rightspeed]]
-    if (!motors)
-      return;
 
     if (mutex)
       return;
 
     this._lastCommand = Date.now();
-    this._speed = (motors[0][1] + motors[1][1]) / 2;
     mutex = true;
 
-    var dt = motors[0][0] / motors[0][1];
+    dt = motors[0][0] / motors[0][1];
 
     setTimeout(function() {
-      console.log("action finished");
+      //console.log("action finished");
       mutex = false;
-      map.translate(0, dt * this._speed * 0.01);
     }, dt + 100);
 
     if (motors[0][1] === motors[0][1])
       _sendCMD('{"motor_command":[ {"name": "right", "action": "step",  "step": ' + motors[0][0] + ', "speed": ' + motors[0][1] + '} , {"name": "left", "action": "step",  "step": ' + motors[1][0] + ', "speed": ' + motors[1][1] + '} ]}');
     else
       _sendCMD('{"motor_command":[ {"name": "both", "action": "step",  "step": ' + motors[0][0] + ', "speed": ' + motors[0][1] + '}]}');
+
+  }
+
+this._motors = function(motors) {
+
+    if (motors[0] === motors[1])
+      _sendCMD('{"motor_command":[{"name": "both", "action": "start",  "speed": ' + motors[0] + '}]}');
+    else
+      _sendCMD('{"motor_command":[{"name": "left", "action": "start",  "speed": ' + motors[0] + '}, {"name": "right", "action": "start",  "speed": ' + motors[1] + '}]}');
 
   }
 
@@ -518,8 +485,8 @@ function NXT() {
   }
 
   this.clearPoll = function() {
-    clearInterval(this._poll);
-    this._poll = undefined;
+    clearInterval(_poll);
+    _poll = undefined;
   }
 
   this.setSensorValue = function(name, value) {
@@ -527,66 +494,27 @@ function NXT() {
     controls['set'+name](value);
   }
 
-  this.sendNextCommand = function(c) {
-    if (auto)
-      robot.sensors(autoSensors);
-
-    var dr=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-115)*(c.g-115) + (c.b- 80)*(c.b- 80));
-    var dg=Math.sqrt( (c.r-130)*(c.r-130) + (c.g-170)*(c.g-170) + (c.b- 90)*(c.b- 90));
-    var dw=Math.sqrt( (c.r-240)*(c.r-240) + (c.g-240)*(c.g-240) + (c.b-200)*(c.b-200));
-    var db=Math.sqrt( (c.r-60)*(c.r-60) + (c.g-60)*(c.g-60) + (c.b-60)*(c.b-60));
-    
-    dw=dw*4;
-    
-    var step = 50;
-    var speed = 100;
-    
-    if (dr<dg && dr<dw && dr<db){  // RED
-       //console.log("red");
-       if (countR==0) robot.motors([step,-step]);
-       else robot.motors([countR*step-20,-countR*step]);
-       if (countR<3) countR++;
-       countG=0;
-    }
-    else{
-        if (dg<dw && dr<db){  // GREEN
-             //console.log("green");
-             if (countG==0) robot.motors([-step,step]);
-             else  robot.motors([-countG*step,countG*step-20]);
-             if (countG<3) countG++;
-             countR=0;
-        }
-        else{
-           if (dw<db){  // WHITE
-           //console.log("white");
-           robot.motors([speed,speed]);
-           countG=0;
-           countR=0;
-           }
-           else{
-               robot.motors([0,0]);
-           }
-        }
-    }
-  }
-
   function _CMDFactory(cmd) {
     return function() {
-      // console.log('>>>  ' + cmd);
+      //console.log('>>>  ' + cmd);
       _sendCMD(cmd);
     }
   }
 
   function _sendCMD(cmd) {
-    console.log('>>> ' + cmd);
-    if (ws && ws.readyState === 1)
+    if (ws.readyState === 1)
       ws.send(cmd);
+
+	//console.log(cmd);
   }
  
   return this;
 }
 
 var robot = NXT();
+
+
+document.getElementById('disconnect').addEventListener('click', robot.disconnect);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      JOYSTICK CONTROL                                                                                     //
@@ -599,17 +527,15 @@ var joystick    = new VirtualJoystick({
   mouseSupport    : true,
   strokeStyle     : 'rgb('+stroke+')'
 });
-var outputEl    = document.getElementById('result');
-
 setInterval(function(){
-  if (auto || !robot._isConnected)
-    return;
+  var outputEl    = document.getElementById('result');
 
   var dx = joystick.deltaX();
   var dy = joystick.deltaY();
 
-  robot.motors(toMotorControls(dx, dy));
-  // robot.motorsStep(toMotorStep(joystick));
+  outputEl.innerHTML  = dx + '   ' + dy;
+  //if (robot.isConnected)
+    //robot.motors(toMotorControls(dx, dy));
 
 }, ControlFreq);
 
@@ -624,22 +550,7 @@ var toMotorControls = function(dx, dy) {
   return [Math.floor(left), Math.floor(right)];
 }
 
-var toMotorStep = function(joystick) {
 
-  const speed = 200;
-  const step = 100;
-
-  if(joystick.up())
-    return [[step, speed], [step, speed]];
-
-  if(joystick.right())
-    return [[-step, speed], [step, speed]];
-
-  if(joystick.left())
-    return [[step, speed], [-step, speed]];
-
-  return undefined;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //      KEYBOARD CONTROLS                                                                                    //
