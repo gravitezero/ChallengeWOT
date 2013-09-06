@@ -312,6 +312,9 @@ var controls = new Controls();
 var autoButton = $('#auto');
 autoButton.click(function() {
 
+  if (!robot._isConnected)
+    return;
+
   if(auto) {
     robot.pollSensors(manuSensors);
     auto = false;
